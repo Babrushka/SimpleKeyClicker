@@ -1,5 +1,6 @@
 import threading
 import time
+import os
 import sys
 import pydirectinput
 import keyboard  # for hotkey start/stop
@@ -7,6 +8,17 @@ import ttkbootstrap as tb
 from ttkbootstrap.constants import *
 from tkinter import Toplevel, PhotoImage
 from tkinter import Frame, LEFT, BOTH, YES, X, Y, RIGHT, TOP, BOTTOM, HORIZONTAL, VERTICAL
+
+def resource_path(relative_path):
+    try:
+        # PyInstaller stores temp data here when running from an executable
+        base_path = sys._MEIPASS
+    except AttributeError:
+        # If not running from a PyInstaller binary, use the current directory
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 
 # -----------------------------
 # Configuration
@@ -22,8 +34,8 @@ Possible Keys/Mouse Actions:
 - Characters: !, @, #, $, %, ^, &, *, (, ), -, _, =, +, [, ], {, }, ;, :, ', ", \\, |, ,, <, ., >, /, ?
 """
 
-ICON_PATH = "logo.ico"
-LOGO_PATH = "logo.png"  # For the UI banner and error windows
+ICON_PATH = resource_path("logo.ico")
+LOGO_PATH = resource_path("logo.png")
 
 class KeyClickerApp:
     def __init__(self, root):

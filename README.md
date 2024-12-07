@@ -2,7 +2,9 @@
 
 **SimpleKeyClicker** is a simple automated keyboard and mouse action tool. It allows you to configure a sequence of key presses and mouse clicks (with a delay in between) and then repeatedly execute them until stopped. Ideal for repetitive tasks like data entry, testing workflows, or gaming macros.
 
+<center>
 ![Tool Screenshot](images/screenshot.png)
+</center>
 
 ## Features
 
@@ -17,7 +19,7 @@
 
 ## Download
 
-**[Download the latest Windows EXE here](https://github.com/timoinglin/SimpleKeyClicker/releases/latest)**
+**[Download the latest Windows EXE here](https://github.com/timoinglin/SimpleKeyClicker/releases/tag/v1.0.0)**
 
 
 ## Usage
@@ -34,7 +36,7 @@
      ```
 
 2. **Run the EXE:**
-   - Download the `SimpleKeyClicker.exe` from the [releases page](https://github.com/timoinglin/SimpleKeyClicker/releases/latest).
+   - Download the `SimpleKeyClicker.exe` from the [releases page](https://github.com/timoinglin/SimpleKeyClicker/releases/tag/v1.0.0).
    - Double-click `SimpleKeyClicker.exe` to start.
 
 ## Customizing / Editing the Code
