@@ -2,9 +2,7 @@
 
 **SimpleKeyClicker** is a simple automated keyboard and mouse action tool. It allows you to configure a sequence of key presses and mouse clicks (with a delay in between) and then repeatedly execute them until stopped. Ideal for repetitive tasks like data entry, testing workflows, or gaming macros.
 
-<center>
 ![Tool Screenshot](images/screenshot.png)
-</center>
 
 ## Features
 
