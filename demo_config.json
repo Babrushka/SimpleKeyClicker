@@ -1,0 +1,39 @@
+{
+    "rows": [
+      {
+        "key": "moveto(150,300)",
+        "sleep": "0.5",
+        "hold": "0.0"
+      },
+      {
+        "key": "click(150,300)",
+        "sleep": "0.7",
+        "hold": "0.0"
+      },
+      {
+        "key": "waitcolor(255,0,0,50,50)",
+        "sleep": "0.3",
+        "hold": "0.0"
+      },
+      {
+        "key": "space",
+        "sleep": "1.0",
+        "hold": "0.0"
+      },
+      {
+        "key": "w",
+        "sleep": "0.5",
+        "hold": "1.2"
+      },
+      {
+        "key": "Hello!",
+        "sleep": "0.8",
+        "hold": "0.0"
+      },
+      {
+        "key": "enter",
+        "sleep": "0.5",
+        "hold": "0.0"
+      }
+    ]
+  }
