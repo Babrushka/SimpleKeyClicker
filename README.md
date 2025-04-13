@@ -34,7 +34,7 @@ A powerful and user-friendly GUI automation tool for simulating keyboard and mou
 
 ## Download
 
-**[Download the latest Windows EXE here](https://github.com/timoinglin/SimpleKeyClicker/releases/tag/1.2.0)**
+**[Download the latest Windows EXE here](https://github.com/timoinglin/SimpleKeyClicker/releases/latest)**
 
 
 ## Installation
