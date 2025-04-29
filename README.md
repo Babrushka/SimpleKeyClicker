@@ -33,11 +33,6 @@ A powerful and user-friendly GUI automation tool for simulating keyboard and mou
 -   ℹ️ **Info Panel**: Detailed, formatted help window explaining all possible keys and commands (accessible from the Help menu).
 
 
-[//]: <> (## Download)
-
-[//]: <> (**[Download the latest Windows EXE here](https://github.com/timoinglin/SimpleKeyClicker/releases/latest)**)
-
-
 ## Installation
 
 1.  **Prerequisites**: Ensure you have Python 3.7+ installed.
