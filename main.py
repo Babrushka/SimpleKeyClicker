@@ -6,6 +6,7 @@ import json
 import pydirectinput
 import keyboard
 import tkinter as tk
+from tkinter import ttk
 import ttkbootstrap as tb
 from ttkbootstrap.constants import *
 from tkinter import Toplevel, PhotoImage, filedialog
@@ -37,6 +38,7 @@ SINGLE_ACTION_KEYS = {
     'f13', 'f14', 'f15', 'f16', 'f17', 'f18', 'f19', 'f20', 'f21', 'f22', 'f23', 'f24',
     'shift', 'ctrl', 'alt', 'win', 'cmd'
 }
+
 
 POSSIBLE_KEYS = """
 --- Possible Keys/Mouse Actions ---
@@ -91,47 +93,30 @@ Color Detection:
 
 DANGEROUS_KEYS = {'alt', 'ctrl', 'shift', 'win', 'cmd', 'f4', 'delete', 'tab'}
 SYSTEM_COMMANDS = {'type(', 'paste(', 'waitcolor', 'ifcolor'}
-DEFAULT_MOUSE_SPEED = 0.5
+DEFAULT_MOUSE_SPEED = 0.001
 COLOR_MATCH_TOLERANCE = 10
 WAITCOLOR_TIMEOUT = 30
 
-class KeyClickerApp:
-    """Main application class for SimpleKeyClicker."""
-
+class MainWindow:
     def __init__(self, root):
         self.root = root
         self.root.title(TOOL_NAME)
-        self.root.geometry("820x370")
+        self.root.geometry("1050x650")
         self.root.resizable(True, True)
-        self.root.minsize(800, 350)
+        self.root.minsize(1050, 350)
+        self.safe_mode = False
+        self.safe_mode_var = tb.BooleanVar(value=self.safe_mode)
+        self.notebook = ttk.Notebook(root)
+        self.notebook.pack(pady=0, expand=True, fill='both')
+        self.frames = []
+        self.clickers = []
+
+        self._create_menu()
+        self._create_main_frame()
         try:
             self.root.iconbitmap(ICON_PATH)
         except:
             pass
-
-        self.safe_mode = True
-        self.running = False
-        self.rows = []
-        self.thread = None
-        self.error_acknowledged = threading.Event()
-        self.current_theme = "flatly"
-        self.safe_mode_var = tb.BooleanVar(value=self.safe_mode)
-
-        self.run_mode_var = tk.StringVar(value="infinite")
-        self.repetitions_var = tk.IntVar(value=10)
-
-        self._setup_style()
-        self._create_menu()
-        self._create_main_frame()
-        self._create_top_frame()
-        self._create_bottom_frame()
-        self._setup_hotkeys()
-        self._update_safe_mode_ui()
-        self._update_repetition_entry_state()
-
-    def _setup_style(self):
-        """Configure the visual theme."""
-        self.style = tb.Style(self.current_theme)
 
     def _create_menu(self):
         """Create the main menu bar."""
@@ -140,6 +125,8 @@ class KeyClickerApp:
 
         file_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="File", menu=file_menu)
+        file_menu.add_command(label="Create new configuration", command=self.create_new_frame)
+        file_menu.add_separator()
         file_menu.add_command(label="Save Configuration", command=self.save_configuration)
         file_menu.add_command(label="Load Configuration", command=self.load_configuration)
         file_menu.add_separator()
@@ -149,24 +136,89 @@ class KeyClickerApp:
         menubar.add_cascade(label="Options", menu=options_menu)
         options_menu.add_checkbutton(label="Safe Mode", variable=self.safe_mode_var,
                                       command=self._toggle_safe_mode_from_menu)
-        options_menu.add_command(label="Toggle Theme", command=self._toggle_theme)
 
         help_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Help", menu=help_menu)
-        help_menu.add_command(label="Show Keys/Actions Info", command=self.show_info)
+        #help_menu.add_command(label="Show Keys/Actions Info", command=self.show_info)
+
+    def create_new_frame(self, text=None):
+        frame = ttk.Frame(self.notebook)
+        frame.pack(fill='both', expand=True, pady=10)
+        if not text: 
+            title = 'default'
+        else:
+            title = text
+        self.notebook.add(frame, text=title)
+        self.frames.append(frame)
+        
+        self.clickers.append(KeyClickerApp(frame, self.safe_mode, text))
+        self.notebook.select(frame)
+        
+    
+    def save_configuration(self):
+        index = self.notebook.index("current")
+        self.clickers[index - 1].save_configuration()
+
+    def load_configuration(self):
+        index = self.notebook.index("current")
+        self.clickers[index - 1].load_configuration()   
 
     def _create_main_frame(self):
         """Create the main container frame."""
-        self.main_frame = tb.Frame(self.root, padding=10)
-        self.main_frame.pack(fill=BOTH, expand=YES)
 
-    def _create_top_frame(self):
+
+
+        if (len(sys.argv) == 1):
+            self.create_new_frame()
+        else:
+            for a in range(1,len(sys.argv)):
+                self.create_new_frame(sys.argv[a])
+
+    def _toggle_safe_mode_from_menu(self):
+        """Handles the Safe Mode toggle specifically from the menu checkbutton."""
+        self.safe_mode = self.safe_mode_var.get()
+        for clicker in self.clickers:
+            clicker._update_safe_mode_ui(self.safe_mode)
+
+class KeyClickerApp:
+    """Main application class for SimpleKeyClicker."""
+    #mouseposition = None
+    def __init__(self, root, safe_mode, config = None):
+        self.root = root
+        self.main_frame = root
+        self.safe_mode = safe_mode
+        self.safe_mode_var = tb.BooleanVar(value=safe_mode)
+        self.running = False
+        self.rows = []
+        self.thread = None
+        self.error_acknowledged = threading.Event()
+        self.current_theme = "flatly"
+        
+        self.run_mode_var = tk.StringVar(value="infinite")
+        self.repetitions_var = tk.IntVar(value=1)
+
+        self._setup_style()
+        self._create_top_frame(config)
+        self._create_bottom_frame()
+        self._setup_hotkeys(config)
+        self._update_safe_mode_ui(self.safe_mode)
+        self._update_repetition_entry_state()
+        
+        if (config): self.load_configuration(config+".json") #load default config
+
+    def _setup_style(self):
+        """Configure the visual theme."""
+        self.style = tb.Style(self.current_theme)
+
+
+
+    def _create_top_frame(self, config=None):
         """Create the top frame with controls."""
         self.top_frame = tb.Frame(self.main_frame)
-        self.top_frame.pack(fill=X, pady=(0,5))
+        self.top_frame.pack(fill='both', pady=(0,5))
 
         control_frame = tb.Frame(self.top_frame)
-        control_frame.pack(fill=X, pady=5)
+        control_frame.pack(fill='both', pady=5)
 
         try:
             self.logo_image = PhotoImage(file=LOGO_PATH)
@@ -186,7 +238,7 @@ class KeyClickerApp:
         self.status_label.pack(side=LEFT, padx=10, expand=True, fill=X)
 
         repetition_frame = tb.Frame(self.top_frame)
-        repetition_frame.pack(fill=X, pady=(5,0))
+        repetition_frame.pack(fill='both', pady=(5,0))
 
         tb.Radiobutton(repetition_frame, text="Run Indefinitely", variable=self.run_mode_var, value="infinite",
                        command=self._update_repetition_entry_state).pack(side=LEFT, padx=(5, 10))
@@ -200,7 +252,9 @@ class KeyClickerApp:
 
         hints_frame = tb.Frame(self.top_frame)
         hints_frame.pack(fill=X, pady=(5,0))
-        tb.Label(hints_frame, text="Hint: Ctrl+F2 to Start, Ctrl+F3 to Stop, ESC to Stop",
+        if (not config): str=''
+        else: str=config
+        tb.Label(hints_frame, text="Hint: Ctrl+F2 ("+ str +") to Start, Ctrl+F3 to Stop, ESC to Stop",
                  font=("Helvetica", 10, "italic")).pack(side=LEFT, padx=5)
         self.safe_mode_label = tb.Label(hints_frame, text="",
                                         font=("Helvetica", 10, "bold"), foreground="green")
@@ -209,7 +263,7 @@ class KeyClickerApp:
     def _create_bottom_frame(self):
         """Create the bottom frame with action rows."""
         self.bottom_frame = tb.Frame(self.main_frame)
-        self.bottom_frame.pack(fill=BOTH, expand=YES, pady=(10, 0))
+        self.bottom_frame.pack(fill='both', expand=YES, pady=(10, 0))
 
         add_row_frame = tb.Frame(self.bottom_frame)
         add_row_frame.pack(fill=X)
@@ -227,24 +281,23 @@ class KeyClickerApp:
 
         self._add_row(is_first=True)
 
-    def _setup_hotkeys(self):
+    def _setup_hotkeys(self, config=None):
         """Setup global hotkeys."""
         try:
-            keyboard.add_hotkey('ctrl+f2', self.start_action)
+            if config in {'f1', 'f2','f3','f4','f5','f6','up','down','left','right'}:
+                keyboard.add_hotkey(config, self.start_action)   
+            else:
+                #pass
+                keyboard.add_hotkey('ctrl+f2', self.start_action)
             keyboard.add_hotkey('ctrl+f3', self.stop_action)
             keyboard.add_hotkey(EMERGENCY_STOP_KEY, self.emergency_stop)
         except Exception as e:
             print(f"Warning: Could not set up global hotkeys. You might need root/admin privileges. Error: {e}")
             self.show_custom_error("Hotkey Warning", f"Could not set up global hotkeys (Ctrl+F2/F3, ESC).\nTry running as administrator.\nError: {e}")
 
-    def _toggle_safe_mode_from_menu(self):
-        """Handles the Safe Mode toggle specifically from the menu checkbutton."""
-        self.safe_mode = self.safe_mode_var.get()
-        self._update_safe_mode_ui()
-
-    def _update_safe_mode_ui(self):
+    def _update_safe_mode_ui(self, safemode = False):
         """Update the safe mode status label text and color."""
-        is_safe = self.safe_mode_var.get()
+        is_safe = safemode
         self.safe_mode_label.config(text="[SAFE MODE ACTIVE]" if is_safe else "[SAFE MODE OFF]",
                                      foreground="green" if is_safe else "red")
         self.safe_mode = is_safe
@@ -268,7 +321,7 @@ class KeyClickerApp:
         self.status_label.config(text=text, bootstyle=style)
         self._clear_all_highlights()
 
-    def _add_row(self, is_first=False, key="", sleep="0.5", hold="0.0"):
+    def _add_row(self, is_first=False, key="", sleep="0.0", hold="0.0", jump = "0", jumpcount = "0"):
         """Add a new action row."""
         row_frame = tb.Frame(self.rows_container)
 
@@ -280,6 +333,8 @@ class KeyClickerApp:
         key_var = tb.StringVar(value=key)
         sleep_var = tb.StringVar(value=sleep)
         hold_var = tb.StringVar(value=hold)
+        jump_var = tb.StringVar(value=jump)
+        jumpcount_var = tb.StringVar(value=jumpcount)
 
         status_label = tb.Label(sub_frame, text="", width=3)
         status_label.pack(side=LEFT)
@@ -296,6 +351,11 @@ class KeyClickerApp:
         tb.Entry(sub_frame, textvariable=hold_var, width=6).pack(side=LEFT, padx=(0,5))
         tb.Label(sub_frame, text="Delay(s):", width=7).pack(side=LEFT)
         tb.Entry(sub_frame, textvariable=sleep_var, width=6).pack(side=LEFT, padx=(0,5))
+        
+        tb.Label(sub_frame, text="jump to:", width=8).pack(side=LEFT)
+        tb.Entry(sub_frame, textvariable=jump_var, width=6).pack(side=LEFT, padx=(0,5))
+        tb.Label(sub_frame, text="jump count:", width=12).pack(side=LEFT)
+        tb.Entry(sub_frame, textvariable=jumpcount_var, width=6).pack(side=LEFT, padx=(0,5))
 
         button_width = 3
         up_btn = tb.Button(sub_frame, text="▲", bootstyle=SECONDARY, width=button_width,
@@ -321,6 +381,8 @@ class KeyClickerApp:
             'key_var': key_var,
             'sleep_var': sleep_var,
             'hold_var': hold_var,
+            'jump_var': jump_var,
+            'jumpcount_var': jumpcount_var,
             'up_btn': up_btn,
             'down_btn': down_btn,
             'dup_btn': dup_btn,
@@ -384,8 +446,10 @@ class KeyClickerApp:
             key = original_row['key_var'].get()
             sleep = original_row['sleep_var'].get()
             hold = original_row['hold_var'].get()
+            jump = original_row['jump_var'].get()
+            jumpcount = original_row['jumpcount_var'].get()
 
-            self._add_row(is_first=False, key=key, sleep=sleep, hold=hold)
+            self._add_row(is_first=False, key=key, sleep=sleep, hold=hold, jump=jump, jumpcount=jumpcount)
 
             new_row_data = self.rows.pop()
             self.rows.insert(index + 1, new_row_data)
@@ -532,6 +596,10 @@ class KeyClickerApp:
 
     def start_action(self):
         """Start the automation sequence."""
+        
+        mouse1 = mouse.Controller()
+        self.mouseposition = mouse1.position
+
         if self.running:
             return
         if not self.rows:
@@ -576,6 +644,7 @@ class KeyClickerApp:
 
     def _run_loop(self):
         """Main automation loop with repetition control."""
+        gettrace = getattr(sys, 'gettrace', None)
         run_mode = self.run_mode_var.get()
         repetitions_to_run = 0
         if run_mode == "limited":
@@ -596,17 +665,24 @@ class KeyClickerApp:
                     loop_count = i + 1
                     status_text = f"Status: Running ({loop_count}/{repetitions_to_run})"
                     self.root.after(0, lambda s=status_text: self.status_label.config(text=s, bootstyle="success"))
-
-                    for j, r in enumerate(self.rows):
+                    j=0
+                    k=0
+                    while (j<len(self.rows)):
                         if not self.running: break
                         self.root.after(0, self._update_row_highlight, j)
+
+                        r = self.rows[j]
 
                         key = r['key_var'].get().strip()
                         delay_str = r['sleep_var'].get()
                         hold_str = r['hold_var'].get()
+                        jump_str = r['jump_var'].get()
+                        jumpcount_str = r['jumpcount_var'].get()
                         try:
                             delay = float(delay_str)
                             hold_time = float(hold_str)
+                            jump = int(jump_str)
+                            jumpcount = int(jumpcount_str)
                         except ValueError:
                             err_msg = f"Invalid number in Row {j+1} ('{delay_str}' or '{hold_str}'). Stopping."
                             self.root.after(0, self.show_custom_error, "Runtime Error", err_msg)
@@ -614,9 +690,14 @@ class KeyClickerApp:
                             break
 
                         self.root.after(0, lambda row=r: row['status_label'].config(text="►"))
-                        time.sleep(0.01)
+                        time.sleep(0.001)
 
+                        if (jumpcount>0 and jump>=0 and k<jumpcount):
+                            k+=1
+                            j = jump - 1
+                            pass
                         action_success = self._perform_action(key, hold_time)
+                        #action_success = 1
 
                         if not action_success or not self.running:
                             self.running = False
@@ -626,7 +707,7 @@ class KeyClickerApp:
                         time.sleep(delay)
                         self.root.after(0, lambda row=r: row['status_label'].config(text=""))
                         self.root.after(0, lambda row=r: row['highlight_frame'].configure(bootstyle="default"))
-
+                        j+=1
                     if not self.running: break
 
             else:
@@ -634,17 +715,24 @@ class KeyClickerApp:
                     loop_count += 1
                     status_text = f"Status: Running (Loop {loop_count})"
                     self.root.after(0, lambda s=status_text: self.status_label.config(text=s, bootstyle="success"))
-
-                    for j, r in enumerate(self.rows):
+                    k = 0
+                    j = 0
+                    while (j<len(self.rows)):  #r in enumerate(self.rows)
+                        
+                        r = self.rows[j]
                         if not self.running: break
                         self.root.after(0, self._update_row_highlight, j)
 
                         key = r['key_var'].get().strip()
                         delay_str = r['sleep_var'].get()
                         hold_str = r['hold_var'].get()
+                        jump_str = r['jump_var'].get()
+                        jumpcount_str = r['jumpcount_var'].get()
                         try:
                             delay = float(delay_str)
                             hold_time = float(hold_str)
+                            jump = int(jump_str)
+                            jumpcount = int(jumpcount_str)
                         except ValueError:
                             err_msg = f"Invalid number in Row {j+1} ('{delay_str}' or '{hold_str}'). Stopping."
                             self.root.after(0, self.show_custom_error, "Runtime Error", err_msg)
@@ -652,8 +740,13 @@ class KeyClickerApp:
                             break
 
                         self.root.after(0, lambda row=r: row['status_label'].config(text="►"))
-                        time.sleep(0.01)
+                        time.sleep(0.001)
 
+                        #action_success = 1
+                        if (jumpcount>0 and jump>=0 and k<jumpcount):
+                            k+=1
+                            j = jump - 1
+                            pass
                         action_success = self._perform_action(key, hold_time)
 
                         if not action_success or not self.running:
@@ -664,7 +757,7 @@ class KeyClickerApp:
                         time.sleep(delay)
                         self.root.after(0, lambda row=r: row['status_label'].config(text=""))
                         self.root.after(0, lambda row=r: row['highlight_frame'].configure(bootstyle="default"))
-
+                        j+=1
                     if not self.running: break
 
         finally:
@@ -703,6 +796,20 @@ class KeyClickerApp:
         """Execute a key/mouse action. Returns True on success, False on handled failure."""
         if not self.running: return False
 
+
+        if (key=="resetmouse"):
+            pyautogui.moveTo(self.mouseposition[0], self.mouseposition[1], duration=DEFAULT_MOUSE_SPEED)
+            return True
+
+        down = False
+        up = False
+        if '+' in key: 
+            key = key.split('+')[1]
+            down = True
+        if '-' in key:
+            key = key.split('-')[1]
+            up = True
+
         is_dangerous_single_key = key.lower() in DANGEROUS_KEYS
         is_system_command = any(cmd in key.lower() for cmd in SYSTEM_COMMANDS)
 
@@ -732,7 +839,12 @@ class KeyClickerApp:
                             time.sleep(hold_time)
                             pydirectinput.mouseUp(button=button)
                         else:
-                            pydirectinput.click(button=button)
+                            if (down):
+                                pydirectinput.mouseDown(button=button)
+                            elif(up):
+                                pydirectinput.mouseUp(button=button)
+                            else:
+                                pydirectinput.click(button=button)
                     else:
                          raise ValueError("Click commands require 2 arguments (x,y)")
                     return True
@@ -782,7 +894,12 @@ class KeyClickerApp:
                         time.sleep(hold_time)
                         pydirectinput.mouseUp()
                     else:
-                        pydirectinput.click()
+                        if(down):
+                            pydirectinput.mouseDown()
+                        elif(up):
+                            pydirectinput.mouseUp()
+                        else:
+                            pydirectinput.click()
                 elif k == "rclick":
                     if hold_time > 0:
                         pydirectinput.mouseDown(button='right')
@@ -803,14 +920,24 @@ class KeyClickerApp:
                         time.sleep(hold_time)
                         pydirectinput.keyUp(key)
                     else:
-                        pydirectinput.press(key)
+                        if(down):
+                            pydirectinput.keyDown(key)
+                        elif(up):
+                            pydirectinput.keyUp(key)
+                        else:
+                            pydirectinput.press(key)
                 elif len(key) == 1:
                     if hold_time > 0:
                         pydirectinput.keyDown(key)
                         time.sleep(hold_time)
                         pydirectinput.keyUp(key)
                     else:
-                        pydirectinput.press(key)
+                        if(down):
+                            pydirectinput.keyDown(key)
+                        elif(up):
+                            pydirectinput.keyUp(key)
+                        else:
+                            pydirectinput.press(key)
                 else:
                     pyautogui.write(key, interval=0.05)
 
@@ -863,7 +990,10 @@ class KeyClickerApp:
                 'repetitions': self.repetitions_var.get(),
                 'rows': [{'key': r['key_var'].get(),
                            'sleep': r['sleep_var'].get(),
-                           'hold': r['hold_var'].get()}
+                           'hold': r['hold_var'].get(),
+                           'jump': r['jump_var'].get(),
+                           'jumpcount': r['jumpcount_var'].get(),
+                           }
                           for r in self.rows]
             }
             with open(file_path, 'w') as f:
@@ -872,13 +1002,13 @@ class KeyClickerApp:
         except Exception as e:
             self.show_custom_error("Save Error", f"Failed to save configuration:\n{str(e)}")
 
-    def load_configuration(self):
+    def load_configuration(self,file_path = 0):
         """Load configuration from a JSON file."""
         if self.running:
             self.show_custom_error("Error", "Stop the current action before loading.")
             return
 
-        file_path = filedialog.askopenfilename(filetypes=[("JSON files", "*.json")],
+        if (not file_path): file_path = filedialog.askopenfilename(filetypes=[("JSON files", "*.json")],
                                                title="Load Configuration")
         if not file_path:
             return
@@ -908,11 +1038,14 @@ class KeyClickerApp:
                 for i, row_config in enumerate(config['rows']):
                     self._add_row(is_first=(i == 0),
                                   key=row_config.get('key', ''),
-                                  sleep=row_config.get('sleep', '0.5'),
-                                  hold=row_config.get('hold', '0.0'))
+                                  sleep=row_config.get('sleep', '0.0'),
+                                  hold=row_config.get('hold', '0.0'),
+                                  jump=row_config.get('jump', '0'),
+                                  jumpcount=row_config.get('jumpcount', '0')
+                                  )
 
             self._redraw_rows()
-            self.show_success("Configuration loaded!")
+            #self.show_success("Configuration loaded!")
 
         except Exception as e:
             for r in reversed(self.rows):
@@ -982,7 +1115,6 @@ class KeyClickerApp:
         """Capture mouse coordinates and color using pynput."""
         data = {'x': None, 'y': None, 'color': None}
         listener = None
-
         def on_click(x, y, button, pressed):
             nonlocal listener
             if button == mouse.Button.left and pressed:
@@ -1085,5 +1217,6 @@ if __name__ == "__main__":
             pass
 
     root = tb.Window()
-    app = KeyClickerApp(root)
+    #app = KeyClickerApp(root)
+    app = MainWindow(root)
     root.mainloop()
