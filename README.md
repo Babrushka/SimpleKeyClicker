@@ -3,7 +3,7 @@
 A powerful and user-friendly GUI automation tool for simulating keyboard and mouse inputs. Built with Python and ttkbootstrap. Perfect for gaming macros, testing, or automating repetitive input tasks.
 
 
-![SimpleKeyClicker Screenshot](images/screenshot30042025.png)
+![SimpleKeyClicker Screenshot](images/app2.png)
 
 ## Features
 
@@ -66,12 +66,22 @@ A powerful and user-friendly GUI automation tool for simulating keyboard and mou
     ```bash
     python main.py
     ```
+    1.1.    CLI arguments can be specified to open single or multiple JSON configs - f2.json, f3.json, etc. (extensions will be added automatically):
+    ```bash
+    python main.py f2 f3 f4
+    ```
 2.  Click "**Add Row**" to create steps for your sequence.
 3.  For each row:
     *   Enter a **Key/Button** or command (see Help > Show Keys/Actions Info).
     *   Use "**Capture**" to easily get coordinates/colors for commands like `moveto`, `click(x,y)`, `waitcolor`.
     *   Set the **Hold Time** (how long a key/button is held down, 0.0 for a simple press/click).
     *   Set the **Delay** (pause *after* the action completes).
+    *   Jump to support:
+        * **jump to**: editbox allows to jump to a defined row at a step. Works only if `jumpcount` > 0.
+        * **jumcount**: editbox specifies count of jump repetitions.
+        * `jump to` and `jumpcount` can be used only once per automation, i.e. don't specify these parameteres more than for only one row in a sequence.
+        > [!CAUTION]
+        > Using `jump to` and `jumpcount` can cause your automation to infinite loop. It is not recommended to use these functions, only in case of extreme need.
 4.  Use the **▲**, **▼**, **❏**, **X** buttons on each row to organize your sequence.
 5.  Select the desired **Run Mode**: "Run Indefinitely" or "Run X Times" (enter the number of repetitions).
 6.  **(Optional)** Go to **File > Save Configuration** to store your setup.
@@ -87,6 +97,7 @@ A powerful and user-friendly GUI automation tool for simulating keyboard and mou
 *   Special keys: `tab`, `space`, `enter`, `esc`, `backspace`, `delete`, `up`, `down`, `left`, `right`, `home`, `end`, `pageup`, `pagedown`, `f1`...`f12`, etc. Handled by `pydirectinput.press`.
 *   Modifier Keys (use `Hold Time > 0`): `shift`, `ctrl`, `alt`, `win` (Windows key). Handled by `pydirectinput.keyDown`/`keyUp`.
 *   Any unrecognized text is typed out using `pyautogui.write` (e.g., `Hello World!`).
+*   `+`, `-` are now excluded from recognised symbols.
 
 **Basic Mouse Input (Current Cursor Position):**
 *   `click` (Left click)
@@ -108,16 +119,6 @@ A powerful and user-friendly GUI automation tool for simulating keyboard and mou
 > Every single `+` keydown event must be completed with `-` release event, i.e. `+crtl`, ... do something ..., `-ctrl`, ....
 
 
-
-**Jump to support:**
-* `jump to`: editbox allows to jump to a defined row at a step. Works only if `jumpcount` > 0.
-* `jumcount`: editbox specifies count of jump repetitions.
-* `jump to` and `jumpcount` can be used only once per automation, i.e. don't specify these parameteres more than for only one row in a sequence.
-
-> [!CAUTION]
-> Using `jump to` and `jumpcount` can cause your automation to infinite loop. It is not recommended to use these functions, only in case of extreme need.
-
-
 **Color Detection:**
 *   `waitcolor(r,g,b,x,y)`: Pauses execution until the color (R, G, B) is detected at screen coordinates (X, Y).
     *   **Behavior**: If the color is not found within the timeout (~30 seconds), a **modal error dialog** appears, pausing the script. Automation **stops** after you click "OK" on the dialog.
@@ -137,7 +138,8 @@ A powerful and user-friendly GUI automation tool for simulating keyboard and mou
 *   The application status will update, and a confirmation dialog will appear.
 
 ### Global Hotkeys
-*   `Ctrl+F2`: Start the automation sequence.
+*   `Ctrl+F2`: Start the automation sequence - default hotkey.
+*   `anyhotkey`: hotkey will be specified as opened JSON config filename, can be one of `f1-f6, up, down`. Don't use wrong filenames!
 *   `Ctrl+F3`: Stop the automation sequence gracefully.
 *   `ESC`: Emergency stop (immediate halt).
     *(Note: May require administrator/root privileges to register)*
