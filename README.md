@@ -10,7 +10,7 @@ A powerful and user-friendly GUI automation tool for simulating keyboard and mou
 -   🎮 **Action Sequencing**: Create and run sequences of keyboard presses and mouse actions.
 -   ⏱️ **Customizable Timing**: Set delays *after* each action and specify hold durations for keys/mouse buttons.
 -   🔄 **Repetition Control**: Choose to run sequences **indefinitely** or for a **specific number of times**.
--   🎨 **Theme Support**: Toggle between **Light** (Flatly) and **Dark** (Darkly) themes via the Options menu.
+[//]: <> (-   🎨 **Theme Support**: Toggle between **Light** (Flatly) and **Dark** (Darkly) themes via the Options menu.)
 -   🖱️ **Advanced Mouse Control**: Perform clicks and movements at specific screen coordinates (`moveto(x,y)`, `click(x,y)`, etc.).
 -   🎯 **Coordinate/Color Capture**: Built-in tool to capture mouse coordinates (X,Y) and screen pixel color (R,G,B) with a single click.
 -   🎨 **Color Detection**: Pause script execution until a specific color appears at designated coordinates (`waitcolor`).
@@ -25,6 +25,7 @@ A powerful and user-friendly GUI automation tool for simulating keyboard and mou
     -   Row status indicators show progress (► running, ✓ completed).
     -   Status bar displays overall state (Stopped, Running, Loop Count, Completed, Emergency Stop).
 -   ⚙️ **UI Organization**:
+    -   Tabbed iterface support, with each sequence per tab
     -   Clean interface with primary controls (Start/Stop) readily available.
     -   File operations, Options (Safe Mode, Theme), and Help are neatly organized in a **top menu bar**.
     -   Action rows feature intuitive controls for **moving up/down**, **duplicating**, and **removing**.
@@ -32,9 +33,9 @@ A powerful and user-friendly GUI automation tool for simulating keyboard and mou
 -   ℹ️ **Info Panel**: Detailed, formatted help window explaining all possible keys and commands (accessible from the Help menu).
 
 
-## Download
+[//]: <> (## Download)
 
-**[Download the latest Windows EXE here](https://github.com/timoinglin/SimpleKeyClicker/releases/latest)**
+[//]: <> (**[Download the latest Windows EXE here](https://github.com/timoinglin/SimpleKeyClicker/releases/latest)**)
 
 
 ## Installation
@@ -100,9 +101,29 @@ A powerful and user-friendly GUI automation tool for simulating keyboard and mou
 *   `mclick(x,y)`: Moves to (X, Y) and performs a middle click.
     *(Use `Hold Time > 0` with these to hold the click at the specified position)*
 
+**Keydown & Keyup input
+*   `+`: modifier before singlekey command modifies behaviour to fire keydown event, i.e: `+ctrl` will fire ctrl keydown event. Must be freed with any row firing keyup event (see next).
+*   `-`: modifier before singlekey command modifies behaviour to fike keyup event, i.e.: `-ctrl` will release ctrl key, after fired before keydown event.
+> [!WARNING]
+> Every single `+` keydown event must be completed with `-` release event, i.e. `+crtl`, ... do something ..., `-ctrl`, ....
+
+
+
+**Jump to support:**
+* `jump to`: editbox allows to jump to a defined row at a step. Works only if `jumpcount` > 0.
+* `jumcount`: editbox specifies count of jump repetitions.
+* `jump to` and `jumpcount` can be used only once per automation, i.e. don't specify these parameteres more than for only one row in a sequence.
+
+> [!CAUTION]
+> Using `jump to` and `jumpcount` can cause your automation to infinite loop. It is not recommended to use these functions, only in case of extreme need.
+
+
 **Color Detection:**
 *   `waitcolor(r,g,b,x,y)`: Pauses execution until the color (R, G, B) is detected at screen coordinates (X, Y).
     *   **Behavior**: If the color is not found within the timeout (~30 seconds), a **modal error dialog** appears, pausing the script. Automation **stops** after you click "OK" on the dialog.
+
+**Reset Mouse Position:**
+*   `resetmouse`: restores mouse position as it was on the moment of starting key automation.
 
 ## Safety Features
 
