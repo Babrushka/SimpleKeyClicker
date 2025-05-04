@@ -3,7 +3,7 @@
 A powerful and user-friendly GUI automation tool for simulating keyboard and mouse inputs. Built with Python and ttkbootstrap. Perfect for gaming macros, testing, or automating repetitive input tasks.
 
 
-![SimpleKeyClicker Screenshot](images/app2.png)
+![SimpleKeyClicker Screenshot](images/app3.png)
 
 ## Features
 
