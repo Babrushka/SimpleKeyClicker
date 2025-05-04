@@ -93,12 +93,14 @@ Color Detection:
 
 DANGEROUS_KEYS = {'alt', 'ctrl', 'shift', 'win', 'cmd', 'f4', 'delete', 'tab'}
 SYSTEM_COMMANDS = {'type(', 'paste(', 'waitcolor', 'ifcolor'}
-DEFAULT_MOUSE_SPEED = 0.001
+DEFAULT_MOUSE_SPEED = 20
+
 COLOR_MATCH_TOLERANCE = 10
 WAITCOLOR_TIMEOUT = 30
 
 class MainWindow:
     def __init__(self, root):
+        self.mouseSpeedVar = tk.DoubleVar(value=1./DEFAULT_MOUSE_SPEED)
         self.root = root
         self.root.title(TOOL_NAME)
         self.root.geometry("1050x650")
@@ -136,32 +138,56 @@ class MainWindow:
         menubar.add_cascade(label="Options", menu=options_menu)
         options_menu.add_checkbutton(label="Safe Mode", variable=self.safe_mode_var,
                                       command=self._toggle_safe_mode_from_menu)
+        options_menu.add_separator()
+        
+        mouseSpeedMenu = tk.Menu(options_menu, tearoff=0)
+        
+        
+        
+        mouseSpeedMenu.add_radiobutton(label="100", variable=self.mouseSpeedVar, value=0.01)
+        mouseSpeedMenu.add_radiobutton(label="20", variable=self.mouseSpeedVar, value=0.05)
+        mouseSpeedMenu.add_radiobutton(label="10", variable=self.mouseSpeedVar, value=0.1)
+        mouseSpeedMenu.add_radiobutton(label="8", variable=self.mouseSpeedVar, value=0.125)
+        mouseSpeedMenu.add_radiobutton(label="5", variable=self.mouseSpeedVar, value=0.2)
+        mouseSpeedMenu.add_radiobutton(label="2", variable=self.mouseSpeedVar, value=0.5)
+        mouseSpeedMenu.add_radiobutton(label="1", variable=self.mouseSpeedVar, value=1.0)
+        mouseSpeedMenu.add_radiobutton(label="0.1", variable=self.mouseSpeedVar, value=10.0)
+        
+        
+        
+        options_menu.add_cascade(label="Mouse Speed", menu=mouseSpeedMenu)
+        
+
 
         help_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Help", menu=help_menu)
         #help_menu.add_command(label="Show Keys/Actions Info", command=self.show_info)
 
+
+
     def create_new_frame(self, text=None):
         frame = ttk.Frame(self.notebook)
         frame.pack(fill='both', expand=True, pady=10)
         if not text: 
-            title = 'default'
+            title = 'test'
         else:
             title = text
         self.notebook.add(frame, text=title)
         self.frames.append(frame)
         
-        self.clickers.append(KeyClickerApp(frame, self.safe_mode, text))
+        self.clickers.append(KeyClickerApp(frame, root, self, text))
         self.notebook.select(frame)
+        
         
     
     def save_configuration(self):
         index = self.notebook.index("current")
-        self.clickers[index - 1].save_configuration()
+        self.clickers[index].save_configuration()
 
     def load_configuration(self):
+        self.create_new_frame()
         index = self.notebook.index("current")
-        self.clickers[index - 1].load_configuration()   
+        self.clickers[index].load_configuration()   
 
     def _create_main_frame(self):
         """Create the main container frame."""
@@ -180,27 +206,34 @@ class MainWindow:
         for clicker in self.clickers:
             clicker._update_safe_mode_ui(self.safe_mode)
 
+
+
+
 class KeyClickerApp:
     """Main application class for SimpleKeyClicker."""
     #mouseposition = None
-    def __init__(self, root, safe_mode, config = None):
-        self.root = root
-        self.main_frame = root
-        self.safe_mode = safe_mode
-        self.safe_mode_var = tb.BooleanVar(value=safe_mode)
+    def __init__(self, KeyClickerFrame, MainWindowFrame, ParentClass, config = None):
+        self.MainWindowFrame = MainWindowFrame
+        self.ParentClass = ParentClass
+        self.root = KeyClickerFrame
+        self.safe_mode = ParentClass.safe_mode
+        self.safe_mode_var = tb.BooleanVar(value=self.safe_mode)
         self.running = False
         self.rows = []
         self.thread = None
         self.error_acknowledged = threading.Event()
         self.current_theme = "flatly"
-        
-        self.run_mode_var = tk.StringVar(value="infinite")
+        self.hotkey='Ctrl+f2'
+        self.extrahotkeybuttons=''
+        self.title='Test'
+        self.description='Enter your description here'
+        self.run_mode_var = tk.StringVar(value="limited")
         self.repetitions_var = tk.IntVar(value=1)
 
         self._setup_style()
         self._create_top_frame(config)
         self._create_bottom_frame()
-        self._setup_hotkeys(config)
+        self._setup_hotkeys()
         self._update_safe_mode_ui(self.safe_mode)
         self._update_repetition_entry_state()
         
@@ -210,15 +243,22 @@ class KeyClickerApp:
         """Configure the visual theme."""
         self.style = tb.Style(self.current_theme)
 
+    def _titlechange(self, var, index, mode):
+        string=self.title.get()
+        self.ParentClass.notebook.tab(self.root, text=string)
+        #asd="asd"
+        pass
 
-
+    def _updatehotkeys(self,var,index,mode):
+        self._setup_hotkeys()
+    
     def _create_top_frame(self, config=None):
         """Create the top frame with controls."""
-        self.top_frame = tb.Frame(self.main_frame)
+        self.top_frame = tb.Frame(self.root)
         self.top_frame.pack(fill='both', pady=(0,5))
 
         control_frame = tb.Frame(self.top_frame)
-        control_frame.pack(fill='both', pady=5)
+        control_frame.pack(fill=BOTH, pady=5)
 
         try:
             self.logo_image = PhotoImage(file=LOGO_PATH)
@@ -228,14 +268,38 @@ class KeyClickerApp:
         except Exception as e:
             print(f"Logo load error: {e}")
             pass
+        
 
-        self.start_button = tb.Button(control_frame, text="Start", padding=(40, 6), bootstyle=PRIMARY, command=self.start_action)
+        title_frame = tb.Frame(control_frame)
+        title_frame.pack(fill=X, expand=TRUE)
+
+        
+        self.title = tb.StringVar(value=self.title)
+        self.title.trace_add("write", self._titlechange)
+
+        self.description = tb.StringVar(value=self.description)
+
+        tb.Label(title_frame, text="Title:").pack(side=LEFT)
+        tb.Entry(title_frame, textvariable=self.title).pack(side=LEFT, padx=(5,5))
+        tb.Label(title_frame, text="Description:").pack(side=LEFT)
+        tb.Entry(title_frame, textvariable=self.description).pack(side=LEFT, fill=X, expand=TRUE, padx=(5,5))
+        
+
+        startstop_frame = tb.Frame(control_frame)
+        startstop_frame.pack(side=LEFT, fill=X, expand=TRUE)
+
+        self.start_button = tb.Button(startstop_frame, text="Start", padding=(40, 6), bootstyle=PRIMARY, command=self.start_action)
         self.start_button.pack(side=LEFT, padx=5)
-        self.stop_button = tb.Button(control_frame, text="Stop", padding=(40, 6), bootstyle=DANGER, command=self.stop_action)
+        self.stop_button = tb.Button(startstop_frame, text="Stop", padding=(40, 6), bootstyle=DANGER, command=self.stop_action)
         self.stop_button.pack(side=LEFT, padx=5)
 
-        self.status_label = tb.Label(control_frame, text="Status: Stopped", bootstyle="secondary")
-        self.status_label.pack(side=LEFT, padx=10, expand=True, fill=X)
+        self.status_label = tb.Label(startstop_frame, text="Status: Stopped", bootstyle="secondary")
+        self.status_label.pack(side=LEFT, padx=10)
+
+        self.safe_mode_label = tb.Label(startstop_frame, text="",
+                                        font=("Helvetica", 10, "bold"), foreground="green")
+        self.safe_mode_label.pack(side=RIGHT, padx=5)
+
 
         repetition_frame = tb.Frame(self.top_frame)
         repetition_frame.pack(fill='both', pady=(5,0))
@@ -250,19 +314,24 @@ class KeyClickerApp:
         self.repetitions_entry.pack(side=LEFT, padx=(0, 2))
         tb.Label(repetition_frame, text="Times").pack(side=LEFT)
 
-        hints_frame = tb.Frame(self.top_frame)
-        hints_frame.pack(fill=X, pady=(5,0))
-        if (not config): str=''
-        else: str=config
-        tb.Label(hints_frame, text="Hint: Ctrl+F2 ("+ str +") to Start, Ctrl+F3 to Stop, ESC to Stop",
-                 font=("Helvetica", 10, "italic")).pack(side=LEFT, padx=5)
-        self.safe_mode_label = tb.Label(hints_frame, text="",
-                                        font=("Helvetica", 10, "bold"), foreground="green")
-        self.safe_mode_label.pack(side=RIGHT, padx=5)
+        hotkeys_frame = tb.Frame(self.top_frame)
+        hotkeys_frame.pack(fill=X, pady=(5,0))
+
+        self.hotkey = tb.StringVar(value=self.hotkey)
+        self.extrahotkeybuttons = tb.StringVar(value=self.extrahotkeybuttons)
+
+        tb.Label(hotkeys_frame, text="Hotkey:").pack(side=LEFT, padx=10)
+        tb.Entry(hotkeys_frame, textvariable=self.hotkey, width=8).pack(side=LEFT, padx=(0,5))
+        
+        tb.Label(hotkeys_frame, text="Possible pressed keys:").pack(side=LEFT, padx=10)
+        tb.Entry(hotkeys_frame, textvariable=self.extrahotkeybuttons, width=20).pack(side=LEFT, padx=(0,5), expand=TRUE, fill=X)
+
+        #tb.Label(hotkeys_frame, text="Hint: Ctrl+F2 ("+ str +") to Start, Ctrl+F3 to Stop, ESC to Stop",
+        #         font=("Helvetica", 10, "italic")).pack(side=LEFT, padx=5)
 
     def _create_bottom_frame(self):
         """Create the bottom frame with action rows."""
-        self.bottom_frame = tb.Frame(self.main_frame)
+        self.bottom_frame = tb.Frame(self.root)
         self.bottom_frame.pack(fill='both', expand=YES, pady=(10, 0))
 
         add_row_frame = tb.Frame(self.bottom_frame)
@@ -283,12 +352,30 @@ class KeyClickerApp:
 
     def _setup_hotkeys(self, config=None):
         """Setup global hotkeys."""
+        str1 = self.extrahotkeybuttons.get()
+        str2= self.hotkey.get()
+        if self.extrahotkeybuttons.get() != '': 
+            extrahotkeybuttons1=self.extrahotkeybuttons.get().split(',')
+            hotkey = self.hotkey.get()
+            hotkeys = []
+            i=0
+            for extrahotkey in extrahotkeybuttons1:
+                hotkeys.append(hotkey+"+"+extrahotkey)
+            for hotkey in hotkeys:
+                try:
+                    keyboard.add_hotkey(hotkey, self.start_action)  
+                     
+                except Exception as e:
+                    self.show_custom_error("error setting hotkeys")
+        if str2 !='':
+            try:
+                keyboard.add_hotkey(self.hotkey.get(), self.start_action) 
+            except Exception as e:
+                self.show_custom_error("error setting hotkeys")
         try:
-            if config in {'f1', 'f2','f3','f4','f5','f6','up','down','left','right'}:
-                keyboard.add_hotkey(config, self.start_action)   
-            else:
-                #pass
-                keyboard.add_hotkey('ctrl+f2', self.start_action)
+            #if config in {'f1', 'f2','f3','f4','f5','f6', 'f7', 'f8','up','down','left','right'}:
+ 
+            #keyboard.add_hotkey('ctrl+f2', self.start_action)
             keyboard.add_hotkey('ctrl+f3', self.stop_action)
             keyboard.add_hotkey(EMERGENCY_STOP_KEY, self.emergency_stop)
         except Exception as e:
@@ -352,9 +439,9 @@ class KeyClickerApp:
         tb.Label(sub_frame, text="Delay(s):", width=7).pack(side=LEFT)
         tb.Entry(sub_frame, textvariable=sleep_var, width=6).pack(side=LEFT, padx=(0,5))
         
-        tb.Label(sub_frame, text="jump to:", width=8).pack(side=LEFT)
+        tb.Label(sub_frame, text="Jump to:", width=8).pack(side=LEFT)
         tb.Entry(sub_frame, textvariable=jump_var, width=6).pack(side=LEFT, padx=(0,5))
-        tb.Label(sub_frame, text="jump count:", width=12).pack(side=LEFT)
+        tb.Label(sub_frame, text="Jump count:", width=12).pack(side=LEFT)
         tb.Entry(sub_frame, textvariable=jumpcount_var, width=6).pack(side=LEFT, padx=(0,5))
 
         button_width = 3
@@ -645,6 +732,7 @@ class KeyClickerApp:
     def _run_loop(self):
         """Main automation loop with repetition control."""
         gettrace = getattr(sys, 'gettrace', None)
+        self._setup_hotkeys()
         run_mode = self.run_mode_var.get()
         repetitions_to_run = 0
         if run_mode == "limited":
@@ -796,18 +884,30 @@ class KeyClickerApp:
         """Execute a key/mouse action. Returns True on success, False on handled failure."""
         if not self.running: return False
 
+        if '>' in key: 
+            chain = key.split('>')[1]
+            foundclicker = next((clicker for clicker in self.ParentClass.clickers if clicker.title.get() == chain), None)
+            if foundclicker: 
+                foundclicker.start_action()
+                while foundclicker.running:
+                    time.sleep(1)
+            else: raise ValueError("key sequence: \""+chain+"\" not found")
+
+            return True
 
         if (key=="resetmouse"):
-            pyautogui.moveTo(self.mouseposition[0], self.mouseposition[1], duration=DEFAULT_MOUSE_SPEED)
+            pyautogui.moveTo(self.mouseposition[0], self.mouseposition[1], duration=self.ParentClass.mouseSpeedVar.get())
             return True
 
         down = False
         up = False
-        if '+' in key: 
-            key = key.split('+')[1]
+        if key[0]=='!': 
+            return True
+        if key[0]=='+': 
+            key = key[1:]
             down = True
-        if '-' in key:
-            key = key.split('-')[1]
+        if key[0]=='-':
+            key = key[1:]
             up = True
 
         is_dangerous_single_key = key.lower() in DANGEROUS_KEYS
@@ -827,34 +927,36 @@ class KeyClickerApp:
                 args_str = key[key.index('(')+1:key.rindex(')')]
                 args = [a.strip() for a in args_str.split(',')]
 
-                if cmd in {'click', 'rclick', 'mclick'}:
-                    if len(args) == 2:
-                        x, y = map(int, args)
-                        pydirectinput.moveTo(x, y)
-                        time.sleep(0.05)
-                        button_map = {'click': 'left', 'rclick': 'right', 'mclick': 'middle'}
-                        button = button_map[cmd]
-                        if hold_time > 0:
+                if cmd in {'click', 'rclick', 'mclick', 'moveto'}:
+                    if len(args)!=2: raise ValueError("mouse events require 2 arguments (x, y)")
+                    x, y = map(int, args)
+                    if '+' in args_str or '-' in args_str:
+                        mouse1 = mouse.Controller()
+                        currentmouseposition = mouse1.position
+                        
+                        x += currentmouseposition[0]
+                        y += currentmouseposition[1]
+                if cmd in {'click', 'rclick', 'mclick', '+click', '-click'}:
+                    pydirectinput.moveTo(x, y)
+                    time.sleep(0.005)
+                    button_map = {'click': 'left', 'rclick': 'right', 'mclick': 'middle'}
+                    button = button_map[cmd]
+                    if hold_time > 0:
+                        pydirectinput.mouseDown(button=button)
+                        time.sleep(hold_time)
+                        pydirectinput.mouseUp(button=button)
+                    else:
+                        if (down):
                             pydirectinput.mouseDown(button=button)
-                            time.sleep(hold_time)
+                        elif(up):
                             pydirectinput.mouseUp(button=button)
                         else:
-                            if (down):
-                                pydirectinput.mouseDown(button=button)
-                            elif(up):
-                                pydirectinput.mouseUp(button=button)
-                            else:
-                                pydirectinput.click(button=button)
-                    else:
-                         raise ValueError("Click commands require 2 arguments (x,y)")
+                            pydirectinput.click(button=button)
                     return True
-
+                
                 elif cmd == 'moveto':
-                    if len(args) == 2:
-                        x, y = map(int, args)
-                        pyautogui.moveTo(x, y, duration=DEFAULT_MOUSE_SPEED)
-                    else:
-                        raise ValueError("moveto requires 2 arguments (x,y)")
+                    #x, y = map(int, args)
+                    pyautogui.moveTo(x, y, duration=self.ParentClass.mouseSpeedVar.get())
                     return True
 
                 elif cmd == 'waitcolor':
@@ -981,13 +1083,18 @@ class KeyClickerApp:
             return
         file_path = filedialog.asksaveasfilename(defaultextension=".json",
                                                  filetypes=[("JSON files", "*.json")],
-                                                 title="Save Configuration")
+                                                 title="Save Configuration",
+                                                 initialfile=self.title.get())
         if not file_path:
             return
         try:
             config = {
                 'run_mode': self.run_mode_var.get(),
                 'repetitions': self.repetitions_var.get(),
+                'title': self.title.get(),
+                'description': self.description.get(),
+                'hotkey': self.hotkey.get(),
+                'extrahotkeybuttons':self.extrahotkeybuttons.get(),
                 'rows': [{'key': r['key_var'].get(),
                            'sleep': r['sleep_var'].get(),
                            'hold': r['hold_var'].get(),
@@ -1019,9 +1126,17 @@ class KeyClickerApp:
             if 'rows' not in config or not isinstance(config['rows'], list):
                  raise ValueError("Invalid configuration file format.")
 
+            title = config.get('title','test')
+            description = config.get('description','')
+            hotkey = config.get('hotkey','')
+            extrahotkeybuttons = config.get('extrahotkeybuttons','')
             loaded_run_mode = config.get('run_mode', 'infinite')
-            loaded_repetitions = config.get('repetitions', 10)
+            loaded_repetitions = config.get('repetitions', 1)
             self.run_mode_var.set(loaded_run_mode)
+            self.title.set(title)
+            self.description.set(description)
+            self.hotkey.set(hotkey)
+            self.extrahotkeybuttons.set(extrahotkeybuttons)
             try:
                 self.repetitions_var.set(int(loaded_repetitions))
             except (ValueError, TypeError):
@@ -1045,6 +1160,7 @@ class KeyClickerApp:
                                   )
 
             self._redraw_rows()
+            self._setup_hotkeys()
             #self.show_success("Configuration loaded!")
 
         except Exception as e:
@@ -1085,8 +1201,8 @@ class KeyClickerApp:
             self.show_custom_error("Error", "Cannot capture while running.")
             return
         try:
-            self.root.attributes('-alpha', 0.5)
-            self.root.lower()
+            self.MainWindowFrame.attributes('-alpha', 0.5)  ###
+            self.MainWindowFrame.lower()                     ###
             capture_info_win = Toplevel(self.root)
             capture_info_win.overrideredirect(True)
             capture_info_win.attributes('-topmost', True)
@@ -1102,7 +1218,7 @@ class KeyClickerApp:
 
         try:
              capture_info_win.destroy()
-             self.root.attributes('-alpha', 1.0)
+             self.MainWindowFrame.attributes('-alpha', 1.0)
              self.root.lift()
              self.root.focus_force()
         except Exception:

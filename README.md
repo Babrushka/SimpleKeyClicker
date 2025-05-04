@@ -72,11 +72,11 @@ A powerful and user-friendly GUI automation tool for simulating keyboard and mou
     *   Set the **Hold Time** (how long a key/button is held down, 0.0 for a simple press/click).
     *   Set the **Delay** (pause *after* the action completes).
     *   Jump to support:
-        * **jump to**: editbox allows to jump to a defined row at a step. Works only if `jumpcount` > 0.
-        * **jumcount**: editbox specifies count of jump repetitions.
-        * `jump to` and `jumpcount` can be used only once per automation, i.e. don't specify these parameteres more than for only one row in a sequence.
+        * **Jump to**: editbox allows to jump to a defined row at a step. Works only if `jumpcount` > 0.
+        * **Jumcount**: editbox specifies count of jump repetitions.
+        * `Jump to` and `Jumpcount` can be used only once per automation, i.e. don't specify these parameteres more than for only one row in a sequence.
         > [!CAUTION]
-        > Using `jump to` and `jumpcount` can cause your automation to infinite loop. It is not recommended to use these functions, only in case of extreme need.
+        > Using `Jump to` and `Jumpcount` can cause your automation to infinite loop. It is not recommended to use these functions, only in case of extreme need.
 4.  Use the **▲**, **▼**, **❏**, **X** buttons on each row to organize your sequence.
 5.  Select the desired **Run Mode**: "Run Indefinitely" or "Run X Times" (enter the number of repetitions).
 6.  **(Optional)** Go to **File > Save Configuration** to store your setup.
@@ -107,7 +107,7 @@ A powerful and user-friendly GUI automation tool for simulating keyboard and mou
 *   `mclick(x,y)`: Moves to (X, Y) and performs a middle click.
     *(Use `Hold Time > 0` with these to hold the click at the specified position)*
 
-**Keydown & Keyup input
+**Keydown & Keyup input**
 *   `+`: modifier before singlekey command modifies behaviour to fire keydown event, i.e: `+ctrl` will fire ctrl keydown event. Must be freed with any row firing keyup event (see next).
 *   `-`: modifier before singlekey command modifies behaviour to fike keyup event, i.e.: `-ctrl` will release ctrl key, after fired before keydown event.
 > [!WARNING]
