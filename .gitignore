@@ -23,5 +23,5 @@ output/
 JSON/
 *.JSON
 
-startall.bat
+/startall.bat
 *.bat
