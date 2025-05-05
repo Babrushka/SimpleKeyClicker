@@ -110,7 +110,7 @@ A powerful and user-friendly GUI automation tool for simulating keyboard and mou
 **Relative mouse input:**
 *   `click(+x,y), click(-x,y), click(-x,-y), moveto(x,-y), rclick(x,+y)..., etc`: Moves the mouse curcor to screen coordinates taking into account current position and applying delta x, y shift to it. Any `+` or `-` in any or both of coordinates will switch the mode to relative shift i.e. `click(+x,y)` will act as
 `click(+x,+y)` if `-` is missing. 
-> [!HINT]
+> [!NOTE]
 > It is better for human to specify exactly `+` or `-` to both coordinates.
 
 **Keydown & Keyup input**
