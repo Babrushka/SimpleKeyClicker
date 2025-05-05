@@ -92,7 +92,7 @@ A powerful and user-friendly GUI automation tool for simulating keyboard and mou
 *   Special keys: `tab`, `space`, `enter`, `esc`, `backspace`, `delete`, `up`, `down`, `left`, `right`, `home`, `end`, `pageup`, `pagedown`, `f1`...`f12`, etc. Handled by `pydirectinput.press`.
 *   Modifier Keys (use `Hold Time > 0`): `shift`, `ctrl`, `alt`, `win` (Windows key). Handled by `pydirectinput.keyDown`/`keyUp`.
 *   Any unrecognized text is typed out using `pyautogui.write` (e.g., `Hello World!`).
-*   `+`, `-` are now excluded from recognised symbols.
+*   `+`, `-`, `>`, `!` are now excluded from recognised symbols.
 
 **Basic Mouse Input (Current Cursor Position):**
 *   `click` (Left click)
@@ -130,7 +130,7 @@ A powerful and user-friendly GUI automation tool for simulating keyboard and mou
 **Chain to other tabs:**
 * `>`: as first symbol will perform executing a specified tab sequence (chain to other tab) i.e. `>drop` will launch entire `drop` sequence (tab with title "drop") if tab is found.
 > [!WARNING]
-> Using chaining is dangerouse and can cause your sequence to infinite loop if sequenced configured in a wrong way.
+> Using chaining is dangerous and can cause your sequence to infinite loop if sequences configured in a wrong way.
 
 **Ignore row:**
 * `!`: as first symbol will ignore all commands in row below, but will not ignore `delay`, `Jump to`, `Jump count` fields.
