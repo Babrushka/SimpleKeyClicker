@@ -75,7 +75,7 @@ A powerful and user-friendly GUI automation tool for simulating keyboard and mou
         * **Jump to**: editbox allows to jump to a defined row at a step. Works only if `jumpcount` > 0.
         * **Jumcount**: editbox specifies count of jump repetitions.
         * `Jump to` and `Jumpcount` can be used only once per automation, i.e. don't specify these parameteres more than for only one row in a sequence.
-        > [!CAUTION]
+        > [!WARNING]
         > Using `Jump to` and `Jumpcount` can cause your automation to infinite loop. It is not recommended to use these functions, only in case of extreme need.
 4.  Use the **▲**, **▼**, **❏**, **X** buttons on each row to organize your sequence.
 5.  Select the desired **Run Mode**: "Run Indefinitely" or "Run X Times" (enter the number of repetitions).
