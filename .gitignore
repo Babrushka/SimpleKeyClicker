@@ -17,9 +17,11 @@ __pycache__/
 
 # Build specific
 output/
-startall.bat
-*.bat
+
 
 # Trash
 JSON/
 *.JSON
+
+startall.bat
+*.bat
