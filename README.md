@@ -107,6 +107,12 @@ A powerful and user-friendly GUI automation tool for simulating keyboard and mou
 *   `mclick(x,y)`: Moves to (X, Y) and performs a middle click.
     *(Use `Hold Time > 0` with these to hold the click at the specified position)*
 
+**Relative mouse input:**
+*   `click(+x,y), click(-x,y), click(-x,-y), moveto(x,-y), rclick(x,+y)..., etc`: Moves the mouse curcor to screen coordinates taking into account current position and applying delta x, y shift to it. Any `+` or `-` in any or both of coordinates will switch the mode to relative shift i.e. `click(+x,y)` will act as
+`click(+x,+y)` if `-` is missing. 
+> [!HINT]
+> It is better for human to specify exactly `+` or `-` to both coordinates.
+
 **Keydown & Keyup input**
 *   `+`: modifier before singlekey command modifies behaviour to fire keydown event, i.e: `+ctrl` will fire ctrl keydown event. Must be freed with any row firing keyup event (see next).
 *   `-`: modifier before singlekey command modifies behaviour to fike keyup event, i.e.: `-ctrl` will release ctrl key, after fired before keydown event.
@@ -121,6 +127,14 @@ A powerful and user-friendly GUI automation tool for simulating keyboard and mou
 **Reset Mouse Position:**
 *   `resetmouse`: restores mouse position as it was on the moment of starting key automation.
 
+**Chain to other tabs:**
+* `>`: as first symbol will perform executing a specified tab sequence (chain to other tab) i.e. `>drop` will launch entire `drop` sequence (tab with title "drop") if tab is found.
+> [!WARNING]
+> Using chaining is dangerouse and can cause your sequence to infinite loop if sequenced configured in a wrong way.
+
+**Ignore row:**
+* `!`: as first symbol will ignore all commands in row below, but will not ignore `delay`, `Jump to`, `Jump count` fields.
+
 ## Safety Features
 
 ### Safe Mode
@@ -132,9 +146,8 @@ A powerful and user-friendly GUI automation tool for simulating keyboard and mou
 *   Pressing the `ESC` key at any time will immediately halt the automation sequence.
 *   The application status will update, and a confirmation dialog will appear.
 
-### Global Hotkeys
-*   `Ctrl+F2`: Start the automation sequence - default hotkey.
-*   `anyhotkey`: hotkey will be specified as opened JSON config filename, can be one of `f1-f6, up, down`. Don't use wrong filenames!
+### Hotkeys
+*   `Ctrl+F2`: Start the automation sequence - default hotkey. Сan be configured in editbox.
 *   `Ctrl+F3`: Stop the automation sequence gracefully.
 *   `ESC`: Emergency stop (immediate halt).
     *(Note: May require administrator/root privileges to register)*

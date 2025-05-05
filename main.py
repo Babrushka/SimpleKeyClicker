@@ -890,11 +890,16 @@ class KeyClickerApp:
             if foundclicker: 
                 foundclicker.start_action()
                 while foundclicker.running:
-                    time.sleep(1)
-            else: raise ValueError("key sequence: \""+chain+"\" not found")
-
-            return True
-
+                    time.sleep(0.005)
+                return True
+            else: 
+                error_message = f"Tab \"{chain}\" not found.\nAutomation stopped."
+                self.root.after(0, self.show_custom_error, "Executing chain failed", error_message)
+                self.error_acknowledged.wait()
+                if self.running:
+                    self.root.after(0, self.stop_action)
+                return False
+            
         if (key=="resetmouse"):
             pyautogui.moveTo(self.mouseposition[0], self.mouseposition[1], duration=self.ParentClass.mouseSpeedVar.get())
             return True
